@@ -78,10 +78,11 @@
 
 #define OSC_FREQ                       16
 
-#define BOARD_PIN_LED_ACTIVITY         GPIO_nLED_BLUE // BLUE
-#define BOARD_PIN_LED_BOOTLOADER       GPIO_nLED_GREEN // GREEN
-#define BOARD_LED_ON                   0
-#define BOARD_LED_OFF                  1
+// No LEDs on this board - bootloader will run without LED indication
+// #define BOARD_PIN_LED_ACTIVITY         0
+// #define BOARD_PIN_LED_BOOTLOADER       0
+// #define BOARD_LED_ON                   0
+// #define BOARD_LED_OFF                  1
 
 #define SERIAL_BREAK_DETECT_DISABLED   1
 

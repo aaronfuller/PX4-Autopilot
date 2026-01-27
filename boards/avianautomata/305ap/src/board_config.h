@@ -55,56 +55,42 @@
 
 /* Configuration ************************************************************************************/
 
-#define BOARD_HAS_LTC44XX_VALIDS      2 //  N Bricks
-#define BOARD_HAS_USB_VALID           1 // LTC Has USB valid
-#define BOARD_HAS_NBAT_V              2d // 2 Digital Voltage
-#define BOARD_HAS_NBAT_I              2d // 2 Digital Current
+#define BOARD_HAS_LTC44XX_VALIDS      0 // Analog power path only, no MCU feedback
+#define BOARD_HAS_USB_VALID           0 // No USB valid detection
+#define BOARD_HAS_NBAT_V              1a // 1 Analog Voltage (ADC)
+#define BOARD_HAS_NBAT_I              1a // 1 Analog Current (from ESC)
 
 /* PX4FMU GPIOs ***********************************************************************************/
 
-/* Trace Clock and D0-D3 are available on the trace connector
- *
- * TRACECLK PE2  - Dedicated       - Trace Connector Pin 1
- * TRACED0  PE3  - nLED_RED        - Trace Connector Pin 3
- * TRACED1  PE4  - nLED_GREEN      - Trace Connector Pin 5
- * TRACED2  PE5  - nLED_BLUE       - Trace Connector Pin 7
- * TRACED3  PC12 - UART5_TX_TELEM2 - Trace Connector Pin 8
-
+/* LEDs - No status LEDs on this board revision
+ * WS2812B RGB LED on PE5 is non-functional (PE5 is SPI4_MISO, can't drive WS2812B)
+ * Will be fixed in next board revision
  */
-#undef TRACE_PINS
 
-/* LEDs are driven with push open drain to support Anode to 5V or 3.3V or used as TRACE0-2 */
+// #define GPIO_nLED_RED        /* PE3 */
+// #define GPIO_nLED_GREEN      /* PE4 */
+// #define GPIO_nLED_BLUE       /* PE5 */
 
-#if !defined(TRACE_PINS)
-#  define GPIO_nLED_RED        /* PE3 */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN3)
-#  define GPIO_nLED_GREEN      /* PE4 */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN4)
-#  define GPIO_nLED_BLUE       /* PE5 */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN5)
-
-#  define BOARD_HAS_CONTROL_STATUS_LEDS      1
-#  define BOARD_OVERLOAD_LED     LED_RED
-#  define BOARD_ARMED_STATE_LED  LED_BLUE
-
-#else
-#  if defined(CONFIG_STM32H7_UART5) && (GPIO_UART5_TX == GPIO_UART5_TX_3)
-#    error Need to disable CONFIG_STM32H7_UART5 for Trace 3 (Retarget to CAN2 if need be)
-#  endif
-#endif
+#define BOARD_HAS_CONTROL_STATUS_LEDS      0
+// #define BOARD_OVERLOAD_LED     LED_RED
+// #define BOARD_ARMED_STATE_LED  LED_BLUE
 
 
 /* SPI */
 
-#define SPI6_nRESET_EXTERNAL1       /* PF10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTF|GPIO_PIN10)
-#define GPIO_SYNC                   /* PE9  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_100MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN9)
+// SPI sensors do not require reset line on this board
+// #define SPI6_nRESET_EXTERNAL1       /* PF10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTF|GPIO_PIN10)
+// Sync signal not used
+// #define GPIO_SYNC                   /* PE9  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_100MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN9)
 
 /* I2C busses */
 
 /* Devices on the onboard buses.
  *
- * Note that these are unshifted addresses.
+ * I2C1: MMC5983MA magnetometer (internal)
+ * I2C2: External accessory port
+ * I2C4: GPS
  */
-#define PX4_I2C_OBDEV_SE050         0x48
-
-#define GPIO_I2C4_DRDY1_BMP388      /* PG5  */  (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTG|GPIO_PIN5)
 
 /*
  * ADC channels
@@ -167,20 +153,17 @@
 /* HW has to large of R termination on ADC todo:change when HW value is chosen */
 #define BOARD_ADC_OPEN_CIRCUIT_V     (5.6f)
 
-/* HW Version and Revision drive signals Default to 1 to detect */
-#define BOARD_HAS_HW_VERSIONING
+/* HW Version and Revision - Not implemented on this board */
+// #define BOARD_HAS_HW_VERSIONING
+// #define GPIO_HW_VER_REV_DRIVE  /* PG0 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTG|GPIO_PIN0)
+// #define GPIO_HW_REV_SENSE      /* PH4 */  GPIO_ADC3_INP15
+// #define GPIO_HW_VER_SENSE      /* PH3 */  GPIO_ADC3_INP14
+// #define HW_INFO_INIT_PREFIX   "V6U"
+// #define V6U00                 HW_VER_REV(0x0,0x0)
 
-#define GPIO_HW_VER_REV_DRIVE  /* PG0 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTG|GPIO_PIN0)
-#define GPIO_HW_REV_SENSE      /* PH4 */  GPIO_ADC3_INP15
-#define GPIO_HW_VER_SENSE      /* PH3 */  GPIO_ADC3_INP14
-#define HW_INFO_INIT_PREFIX   "V6U"
-#define V6U00                 HW_VER_REV(0x0,0x0)
-
-/* HEATER
- * PWM in future
- */
-#define GPIO_HEATER_OUTPUT   /* PA2  T2CH3 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN2)
-#define HEATER_OUTPUT_EN(on_true)	      px4_arch_gpiowrite(GPIO_HEATER_OUTPUT, (on_true))
+/* HEATER - Not implemented on this board */
+// #define GPIO_HEATER_OUTPUT   /* PA2  T2CH3 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN2)
+// #define HEATER_OUTPUT_EN(on_true)	      px4_arch_gpiowrite(GPIO_HEATER_OUTPUT, (on_true))
 
 /* PE6 is nARMED
  *  The GPIO will be set as input while not armed HW will have external HW Pull UP.
@@ -198,50 +181,50 @@
 
 /* Power supply control and monitoring GPIOs */
 
-#define GPIO_nPOWER_IN_A                /* PG1  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN1)
-#define GPIO_nPOWER_IN_B                /* PG2  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN2)
-#define GPIO_nPOWER_IN_C                /* PG3  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN3)
+// Power valid detection not connected - analog power path only
+// #define GPIO_nPOWER_IN_A                /* PG1  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN1)
+// #define GPIO_nPOWER_IN_B                /* PG2  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN2)
+// #define GPIO_nPOWER_IN_C                /* PG3  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN3)
 
-#define GPIO_nVDD_BRICK1_VALID          GPIO_nPOWER_IN_A /* Brick 1 Is Chosen */
-#define GPIO_nVDD_BRICK2_VALID          GPIO_nPOWER_IN_B /* Brick 2 Is Chosen  */
+// #define GPIO_nVDD_BRICK1_VALID          GPIO_nPOWER_IN_A /* Brick 1 Is Chosen */
+// #define GPIO_nVDD_BRICK2_VALID          GPIO_nPOWER_IN_B /* Brick 2 Is Chosen  */
 #define BOARD_NUMBER_BRICKS             2
 #define BOARD_NUMBER_DIGITAL_BRICKS     2
-#define GPIO_nVDD_USB_VALID             GPIO_nPOWER_IN_C /* USB     Is Chosen */
+// #define GPIO_nVDD_USB_VALID             GPIO_nPOWER_IN_C /* USB     Is Chosen */
 
-#define GPIO_VDD_5V_PERIPH_nEN          /* PG4  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTG|GPIO_PIN4)
-#define GPIO_VDD_5V_PERIPH_nOC          /* PE15 */ (GPIO_INPUT |GPIO_FLOAT|GPIO_PORTE|GPIO_PIN15)
-#define GPIO_VDD_5V_HIPOWER_nEN         /* PG10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTG|GPIO_PIN10)
-#define GPIO_VDD_5V_HIPOWER_nOC         /* PF13 */ (GPIO_INPUT |GPIO_FLOAT|GPIO_PORTF|GPIO_PIN13)
-#define GPIO_VDD_3V3_SENSORS_EN         /* PG12 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTG|GPIO_PIN12)
-#define GPIO_VDD_3V3_SPEKTRUM_POWER_EN  /* PH2  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN2)
-#define GPIO_VDD_3V3_SD_CARD_EN         /* PC13 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTC|GPIO_PIN13)
+/* Power control - Not implemented, power rails come up automatically */
+// #define GPIO_VDD_5V_PERIPH_nEN          /* PG4  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTG|GPIO_PIN4)
+// #define GPIO_VDD_5V_PERIPH_nOC          /* PE15 */ (GPIO_INPUT |GPIO_FLOAT|GPIO_PORTE|GPIO_PIN15)
+// #define GPIO_VDD_5V_HIPOWER_nEN         /* PG10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTG|GPIO_PIN10)
+// #define GPIO_VDD_5V_HIPOWER_nOC         /* PF13 */ (GPIO_INPUT |GPIO_FLOAT|GPIO_PORTF|GPIO_PIN13)
+// #define GPIO_VDD_3V3_SENSORS_EN         /* PG12 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTG|GPIO_PIN12)
+// #define GPIO_VDD_3V3_SPEKTRUM_POWER_EN  /* PH2  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN2)
+// #define GPIO_VDD_3V3_SD_CARD_EN         /* PC13 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTC|GPIO_PIN13)
 
 /* Spare GPIO */
 
-#define GPIO_PG6                        /* PG6  */  (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN6)
+// #define GPIO_PG6                        /* PG6  */  (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN6)
 #define GPIO_PD15                       /* PD15 */  (GPIO_INPUT|GPIO_FLOAT|GPIO_PORTD|GPIO_PIN15)
-#define GPIO_PG15                       /* PG15 */  (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN15)
+// #define GPIO_PG15                       /* PG15 */  (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN15)
 
 
-/* Define True logic Power Control in arch agnostic form */
+/* Define True logic Power Control in arch agnostic form - Not implemented */
 
-#define VDD_5V_PERIPH_EN(on_true)          px4_arch_gpiowrite(GPIO_VDD_5V_PERIPH_nEN, !(on_true))
-#define VDD_5V_HIPOWER_EN(on_true)         px4_arch_gpiowrite(GPIO_VDD_5V_HIPOWER_nEN, !(on_true))
-#define VDD_3V3_SENSORS_EN(on_true)        px4_arch_gpiowrite(GPIO_VDD_3V3_SENSORS_EN, (on_true))
-#define VDD_3V3_SPEKTRUM_POWER_EN(on_true) px4_arch_gpiowrite(GPIO_VDD_3V3_SPEKTRUM_POWER_EN, (on_true))
-#define READ_VDD_3V3_SPEKTRUM_POWER_EN()   px4_arch_gpioread(GPIO_VDD_3V3_SPEKTRUM_POWER_EN)
-#define VDD_3V3_SD_CARD_EN(on_true)        px4_arch_gpiowrite(GPIO_VDD_3V3_SD_CARD_EN, (on_true))
+// #define VDD_5V_PERIPH_EN(on_true)          px4_arch_gpiowrite(GPIO_VDD_5V_PERIPH_nEN, !(on_true))
+// #define VDD_5V_HIPOWER_EN(on_true)         px4_arch_gpiowrite(GPIO_VDD_5V_HIPOWER_nEN, !(on_true))
+// #define VDD_3V3_SENSORS_EN(on_true)        px4_arch_gpiowrite(GPIO_VDD_3V3_SENSORS_EN, (on_true))
+// #define VDD_3V3_SPEKTRUM_POWER_EN(on_true) px4_arch_gpiowrite(GPIO_VDD_3V3_SPEKTRUM_POWER_EN, (on_true))
+// #define READ_VDD_3V3_SPEKTRUM_POWER_EN()   px4_arch_gpioread(GPIO_VDD_3V3_SPEKTRUM_POWER_EN)
+// #define VDD_3V3_SD_CARD_EN(on_true)        px4_arch_gpiowrite(GPIO_VDD_3V3_SD_CARD_EN, (on_true))
 
 
-/* Tone alarm output */
+/* Tone alarm output - Not wired on this board */
 
-#define TONE_ALARM_TIMER        14  /* Timer 14 */
-#define TONE_ALARM_CHANNEL      1  /* PF9 GPIO_TIM14_CH1OUT_2 */
-
-#define GPIO_BUZZER_1           /* PF9 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTF|GPIO_PIN9)
-
-#define GPIO_TONE_ALARM_IDLE    GPIO_BUZZER_1
-#define GPIO_TONE_ALARM         GPIO_TIM14_CH1OUT_2
+// #define TONE_ALARM_TIMER        14  /* Timer 14 */
+// #define TONE_ALARM_CHANNEL      1  /* PF9 GPIO_TIM14_CH1OUT_2 */
+// #define GPIO_BUZZER_1           /* PF9 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTF|GPIO_PIN9)
+// #define GPIO_TONE_ALARM_IDLE    GPIO_BUZZER_1
+// #define GPIO_TONE_ALARM         GPIO_TIM14_CH1OUT_2
 
 /* USB OTG FS
  *
@@ -253,12 +236,13 @@
 #define HRT_TIMER               8  /* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL       3  /* use capture/compare channel 3 */
 
-#define HRT_PPM_CHANNEL         /* T8C1 */  1  /* use capture/compare channel 1 */
-#define GPIO_PPM_IN             /* PI5 T8C1 */ GPIO_TIM8_CH1IN_2
+/* PPM input - Not implemented on this board */
+// #define HRT_PPM_CHANNEL         /* T8C1 */  1  /* use capture/compare channel 1 */
+// #define GPIO_PPM_IN             /* PI5 T8C1 */ GPIO_TIM8_CH1IN_2
 
-/* RC Serial port */
+/* RC Serial port - SBUS on UART */
 
-#define RC_SERIAL_PORT                     "/dev/ttyS5"
+#define RC_SERIAL_PORT                     "/dev/ttyS4"  // UART5
 #define RC_SERIAL_SINGLEWIRE
 #define RC_SERIAL_SWAP_RXTX
 
@@ -272,37 +256,22 @@
 #define PWMIN_TIMER_CHANNEL    /* T4C2 */ 2
 #define GPIO_PWM_IN            /* PD13 */ GPIO_TIM4_CH2IN_2
 
-/* Safety Switch is HW version dependent on having an PX4IO
- * So we init to a benign state with the _INIT definition
- * and provide the the non _INIT one for the driver to make a run time
- * decision to use it.
- */
-#define GPIO_nSAFETY_SWITCH_LED_OUT_INIT   /* PD10 */ (GPIO_INPUT|GPIO_FLOAT|GPIO_PORTD|GPIO_PIN10)
-#define GPIO_nSAFETY_SWITCH_LED_OUT        /* PD10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN10)
-
-/* Enable the FMU to control it if there is no px4io fixme:This should be BOARD_SAFETY_LED(__ontrue) */
-#define GPIO_LED_SAFETY GPIO_nSAFETY_SWITCH_LED_OUT
-
-#define GPIO_SAFETY_SWITCH_IN              /* PF5 */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTF|GPIO_PIN5)
-/* Enable the FMU to use the switch it if there is no px4io fixme:This should be BOARD_SAFTY_BUTTON() */
-#define GPIO_BTN_SAFETY GPIO_SAFETY_SWITCH_IN /* Enable the FMU to control it if there is no px4io */
+/* Safety Switch - Not implemented on this board */
+// #define GPIO_nSAFETY_SWITCH_LED_OUT_INIT   /* PD10 */ (GPIO_INPUT|GPIO_FLOAT|GPIO_PORTD|GPIO_PIN10)
+// #define GPIO_nSAFETY_SWITCH_LED_OUT        /* PD10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN10)
+// #define GPIO_LED_SAFETY GPIO_nSAFETY_SWITCH_LED_OUT
+// #define GPIO_SAFETY_SWITCH_IN              /* PF5 */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTF|GPIO_PIN5)
+// #define GPIO_BTN_SAFETY GPIO_SAFETY_SWITCH_IN
 
 /* Power switch controls ******************************************************/
 
-#define SPEKTRUM_POWER(_on_true)           VDD_3V3_SPEKTRUM_POWER_EN(_on_true)
+// #define SPEKTRUM_POWER(_on_true)           VDD_3V3_SPEKTRUM_POWER_EN(_on_true)
 
-/*
- * FMUv6U has a separate RC_IN
- *
- * GPIO PPM_IN on PI5 T8CH1
- * SPEKTRUM_RX (it's TX or RX in Bind) on UART6 PC7
- *   Inversion is possible in the UART and can drive  GPIO PPM_IN as an output
- */
-
-#define GPIO_PPM_IN_AS_OUT             (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTI|GPIO_PIN5)
-#define SPEKTRUM_RX_AS_GPIO_OUTPUT()   px4_arch_configgpio(GPIO_PPM_IN_AS_OUT)
-#define SPEKTRUM_RX_AS_UART()          /* Can be left as uart */
-#define SPEKTRUM_OUT(_one_true)        px4_arch_gpiowrite(GPIO_PPM_IN_AS_OUT, (_one_true))
+/* RC input - SBUS on UART, no PPM or SPEKTRUM GPIO control */
+// #define GPIO_PPM_IN_AS_OUT             (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTI|GPIO_PIN5)
+// #define SPEKTRUM_RX_AS_GPIO_OUTPUT()   px4_arch_configgpio(GPIO_PPM_IN_AS_OUT)
+// #define SPEKTRUM_RX_AS_UART()          /* Can be left as uart */
+// #define SPEKTRUM_OUT(_one_true)        px4_arch_gpiowrite(GPIO_PPM_IN_AS_OUT, (_one_true))
 
 #define SDIO_SLOTNO                    0  /* Only one slot */
 #define SDIO_MINOR                     0
@@ -324,7 +293,7 @@
  * provides the true logic GPIO BOARD_ADC_xxxx macros.
  */
 #define BOARD_ADC_USB_CONNECTED (px4_arch_gpioread(GPIO_OTGFS_VBUS))
-#define BOARD_ADC_USB_VALID     (!px4_arch_gpioread(GPIO_nVDD_USB_VALID))
+#define BOARD_ADC_USB_VALID     (1)  /* No USB valid detection - always assume valid */
 
 /* FMUv6U never powers off the Servo rail */
 
@@ -352,8 +321,9 @@
 #  error Unsupported BOARD_HAS_LTC44XX_VALIDS value
 #endif
 
-#define BOARD_ADC_PERIPH_5V_OC  (!px4_arch_gpioread(GPIO_VDD_5V_PERIPH_nOC))
-#define BOARD_ADC_HIPOWER_5V_OC (!px4_arch_gpioread(GPIO_VDD_5V_HIPOWER_nOC))
+// No overcurrent detection on this board (analog power path only)
+// #define BOARD_ADC_PERIPH_5V_OC  (!px4_arch_gpioread(GPIO_VDD_5V_PERIPH_nOC))
+// #define BOARD_ADC_HIPOWER_5V_OC (!px4_arch_gpioread(GPIO_VDD_5V_HIPOWER_nOC))
 
 
 /* This board provides a DMA pool and APIs */
@@ -365,27 +335,9 @@
 
 #define PX4_GPIO_INIT_LIST { \
 		PX4_ADC_GPIO,                     \
-		GPIO_HW_VER_REV_DRIVE,            \
 		GPIO_CAN1_TX,                     \
 		GPIO_CAN1_RX,                     \
-		GPIO_HEATER_OUTPUT,               \
-		GPIO_nPOWER_IN_A,                 \
-		GPIO_nPOWER_IN_B,                 \
-		GPIO_nPOWER_IN_C,                 \
-		GPIO_VDD_5V_PERIPH_nEN,           \
-		GPIO_VDD_5V_PERIPH_nOC,           \
-		GPIO_VDD_5V_HIPOWER_nEN,          \
-		GPIO_VDD_5V_HIPOWER_nOC,          \
-		GPIO_VDD_3V3_SENSORS_EN,          \
-		GPIO_VDD_3V3_SPEKTRUM_POWER_EN,   \
-		GPIO_VDD_3V3_SD_CARD_EN,          \
 		GPIO_PD15,                        \
-		GPIO_SYNC,                        \
-		SPI6_nRESET_EXTERNAL1,            \
-		GPIO_TONE_ALARM_IDLE,             \
-		GPIO_nSAFETY_SWITCH_LED_OUT_INIT, \
-		GPIO_SAFETY_SWITCH_IN,            \
-		GPIO_PG6,                         \
 		GPIO_nARMED_INIT                  \
 	}
 

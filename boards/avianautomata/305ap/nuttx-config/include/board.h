@@ -236,7 +236,7 @@
 
 /* SPI45 clock source */
 
-#define STM32_RCC_D2CCIP1R_SPI45SRC  RCC_D2CCIP1R_SPI45SEL_APB
+#define STM32_RCC_D2CCIP1R_SPI45SRC  RCC_D2CCIP1R_SPI45SEL_PLL2
 
 /* SPI6 clock source */
 
@@ -250,8 +250,8 @@
 
 #define STM32_RCC_D3CCIPR_ADCSRC     RCC_D3CCIPR_ADCSEL_PLL2
 
-/* CAN FD clock source */
-#define STM32_FDCANCLK               RCC_D2CCIP1R_FDCANSEL_PLL1
+/* FDCAN 1 2 clock source */
+#define STM32_FDCANCLK               STM32_HSE_FREQUENCY
 
 /* FLASH wait states
  *
@@ -350,15 +350,15 @@
 
 /* Alternate function pin selections ************************************************/
 
-// #define GPIO_USART1_RX   GPIO_USART1_RX_3      /* PB7 */
-#define GPIO_USART1_TX   GPIO_USART1_TX_2      /* PB6 */
+#define GPIO_USART1_RX   GPIO_USART1_RX_2      /* PA10 - dummy pin, TX/RX swapped */
+#define GPIO_USART1_TX   GPIO_USART1_TX_2      /* PA9 - becomes RX with SWAP (motor telem) */
 
 #define GPIO_USART2_RX   GPIO_USART2_RX_2       /* PD6   */
 #define GPIO_USART2_TX   GPIO_USART2_TX_2       /* PD5   */
 // #define GPIO_USART2_RTS  GPIO_USART2_RTS_2      /* PD4   */
 // #define GPIO_USART2_CTS  GPIO_USART2_CTS_NSS_2  /* PD3   */
 
-// #define GPIO_USART3_RX   GPIO_USART3_RX_3   /* PD9   */
+#define GPIO_USART3_RX   GPIO_USART3_RX_3   /* PD9 - not connected, TX-only UART */
 #define GPIO_USART3_TX   GPIO_USART3_TX_3   /* PD8   */
 
 #define GPIO_UART4_RX    GPIO_UART4_RX_2    /* PA1 */
@@ -366,10 +366,8 @@
 #define GPIO_UART4_RTS	 GPIO_UART4_RTS_2   /* PB14 */
 #define GPIO_UART4_CTS   GPIO_UART4_CTS_1   /* PB0 */
 
-// #define GPIO_UART5_RX    GPIO_UART5_RX_3    /* PD2  */
-#define GPIO_UART5_TX    GPIO_UART5_TX_1    /* PC12 */
-// GPIO_UART5_RTS   no remap                /* PC8  */
-// GPIO_UART5_CTS  No remap                 /* PC9  */
+#define GPIO_UART5_RX    GPIO_UART5_RX_1    /* PB12 - dummy pin, TX/RX swapped (moved from PD2 due to SDMMC1_CMD conflict) */
+#define GPIO_UART5_TX    GPIO_UART5_TX_2    /* PB13 - becomes RX with SWAP */
 
 #define GPIO_USART6_RX   GPIO_USART6_RX_1   /* PC7 */
 #define GPIO_USART6_TX   GPIO_USART6_TX_1   /* PC6  */
@@ -388,8 +386,11 @@
  * CAN1 is routed to transceiver.
  * CAN2 is routed to transceiver.
  */
-#define GPIO_CAN1_RX     GPIO_CAN1_RX_3     /* PD0  */
-#define GPIO_CAN1_TX     GPIO_CAN1_TX_3     /* PD1  */
+#define GPIO_CAN1_RX    GPIO_CAN1_RX_3     /* PD0  */
+#define GPIO_CAN1_TX    GPIO_CAN1_TX_3     /* PD1  */
+
+#define GPIO_CAN2_RX	GPIO_CAN2_RX_2	   /* PB5  */
+#define GPIO_CAN2_TX	GPIO_CAN2_TX_2	   /* PB6  */
 
 /* SPI
  * SPI1 is sensors1
@@ -403,25 +404,25 @@
 
 #define ADJ_SLEW_RATE(p) (((p) & ~GPIO_SPEED_MASK) | (GPIO_SPEED_2MHz))
 
-#define GPIO_SPI1_MISO   GPIO_SPI1_MISO_3               /* PG9  */
-#define GPIO_SPI1_MOSI   GPIO_SPI1_MOSI_1               /* PA7  */
-#define GPIO_SPI1_SCK    ADJ_SLEW_RATE(GPIO_SPI1_SCK_3) /* PG11 */
+#define GPIO_SPI1_MISO   GPIO_SPI1_MISO_1               /* PA6  */
+#define GPIO_SPI1_MOSI   GPIO_SPI1_MOSI_3               /* PD7  */
+#define GPIO_SPI1_SCK    ADJ_SLEW_RATE(GPIO_SPI1_SCK_1) /* PA5  */
 
-#define GPIO_SPI2_MISO   GPIO_SPI2_MISO_3               /* PI2  */
-#define GPIO_SPI2_MOSI   GPIO_SPI2_MOSI_4               /* PI3  */
-#define GPIO_SPI2_SCK    ADJ_SLEW_RATE(GPIO_SPI2_SCK_6) /* PI1  */
+#define GPIO_SPI2_MISO   GPIO_SPI2_MISO_2               /* PC2_C */
+#define GPIO_SPI2_MOSI   GPIO_SPI2_MOSI_2               /* PC1  */
+#define GPIO_SPI2_SCK    ADJ_SLEW_RATE(GPIO_SPI2_SCK_5) /* PD3  */
 
-#define GPIO_SPI3_MISO   GPIO_SPI3_MISO_2               /* PC11 */
+#define GPIO_SPI3_MISO   GPIO_SPI3_MISO_1               /* PB4 */
 #define GPIO_SPI3_MOSI   GPIO_SPI3_MOSI_3               /* PB2  */
-#define GPIO_SPI3_SCK    ADJ_SLEW_RATE(GPIO_SPI3_SCK_2) /* PC10 */
+#define GPIO_SPI3_SCK    ADJ_SLEW_RATE(GPIO_SPI3_SCK_1) /* PB3 */
 
-#define GPIO_SPI5_MISO   GPIO_SPI5_MISO_2               /* PH7  */
-#define GPIO_SPI5_MOSI   GPIO_SPI5_MOSI_1               /* PF11 */
-#define GPIO_SPI5_SCK    ADJ_SLEW_RATE(GPIO_SPI5_SCK_1) /* PF7  */
+#define GPIO_SPI4_MISO   GPIO_SPI4_MISO_1               /* PE13  */
+#define GPIO_SPI4_MOSI   GPIO_SPI4_MOSI_2               /* PE6 */
+#define GPIO_SPI4_SCK    ADJ_SLEW_RATE(GPIO_SPI4_SCK_2) /* PE2  */
 
-#define GPIO_SPI6_MISO   GPIO_SPI6_MISO_2               /* PA6  */
-#define GPIO_SPI6_MOSI   GPIO_SPI6_MOSI_1               /* PG14 */
-#define GPIO_SPI6_SCK    ADJ_SLEW_RATE(GPIO_SPI6_SCK_1) /* PG13 */
+// #define GPIO_SPI6_MISO   GPIO_SPI6_MISO_2               /* PA6  */
+// #define GPIO_SPI6_MOSI   GPIO_SPI6_MOSI_1               /* PG14 */
+// #define GPIO_SPI6_SCK    ADJ_SLEW_RATE(GPIO_SPI6_SCK_1) /* PG13 */
 
 /* I2C
  *
@@ -437,42 +438,46 @@
 #define GPIO_I2C1_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN8)
 #define GPIO_I2C1_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN9)
 
-#define GPIO_I2C2_SCL GPIO_I2C2_SCL_2       /* PF1 */
-#define GPIO_I2C2_SDA GPIO_I2C2_SDA_2       /* PF0 */
+#define GPIO_I2C2_SCL GPIO_I2C2_SCL_1       /* PB10 */
+#define GPIO_I2C2_SDA GPIO_I2C2_SDA_1       /* PB11 */
 
-#define GPIO_I2C2_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTF | GPIO_PIN1)
-#define GPIO_I2C2_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTF | GPIO_PIN0)
+#define GPIO_I2C2_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN10)
+#define GPIO_I2C2_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN11)
 
-#define GPIO_I2C3_SCL GPIO_I2C3_SCL_1       /* PA8 */
-#define GPIO_I2C3_SDA GPIO_I2C3_SDA_2       /* PH8 */
+// #define GPIO_I2C3_SCL GPIO_I2C3_SCL_1       /* PA8 */
+// #define GPIO_I2C3_SDA GPIO_I2C3_SDA_2       /* PH8 */
 
-#define GPIO_I2C3_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTA | GPIO_PIN8)
-#define GPIO_I2C3_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTH | GPIO_PIN8)
+// #define GPIO_I2C3_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTA | GPIO_PIN8)
+// #define GPIO_I2C3_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTH | GPIO_PIN8)
 
-#define GPIO_I2C4_SCL GPIO_I2C4_SCL_2       /* PF14 */
-#define GPIO_I2C4_SDA GPIO_I2C4_SDA_2       /* PF15 */
+#define GPIO_I2C4_SCL GPIO_I2C4_SCL_1       /* PD12 */
+#define GPIO_I2C4_SDA GPIO_I2C4_SDA_1       /* PD13 */
 
-#define GPIO_I2C4_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN | GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTF | GPIO_PIN14)
-#define GPIO_I2C4_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN | GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTF | GPIO_PIN15)
+#define GPIO_I2C4_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN | GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTD | GPIO_PIN12)
+#define GPIO_I2C4_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN | GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTD | GPIO_PIN13)
 
-/* SDMMC2
+/* SDMMC1 - SD Card Slot
  *
  *      VDD 3.3
  *      GND
- *      SDMMC2_CK                           PD6
- *      SDMMC2_CMD                          PD7
- *      SDMMC2_D0                           PB14
- *      SDMMC2_D1                           PB15
- *      SDMMC2_D2                           PG11
- *      SDMMC2_D3                           PB4
+ *      SDMMC1_CK                           PC12
+ *      SDMMC1_CMD                          PD2
+ *      SDMMC1_D0                           PC8
+ *      SDMMC1_D1                           PC9
+ *      SDMMC1_D2                           PC10
+ *      SDMMC1_D3                           PC11
+ *      SDMMC1_CD (card detect)             PE3
  */
 
-#define GPIO_SDMMC2_CK   GPIO_SDMMC2_CK_2  /* PC1 */
-#define GPIO_SDMMC2_CMD  GPIO_SDMMC2_CMD_1 /* PD7 */
-//      GPIO_SDMMC2_D0   No Remap          /* PB14 */
-//      GPIO_SDMMC2_D1   No Remap          /* PB15 */
-#define GPIO_SDMMC2_D2   GPIO_SDMMC2_D2_2  /* PB3 */
-//      GPIO_SDMMC2_D3    No Remap         /* PB4 */
+#define GPIO_SDMMC1_CK   (GPIO_ALT|GPIO_AF12|GPIO_SPEED_50MHz|GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN12)  /* PC12 */
+#define GPIO_SDMMC1_CMD  (GPIO_ALT|GPIO_AF12|GPIO_SPEED_50MHz|GPIO_PUSHPULL|GPIO_PORTD|GPIO_PIN2)  /* PD2 */
+#define GPIO_SDMMC1_D0   (GPIO_ALT|GPIO_AF12|GPIO_SPEED_50MHz|GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN8)  /* PC8 */
+#define GPIO_SDMMC1_D1   (GPIO_ALT|GPIO_AF12|GPIO_SPEED_50MHz|GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN9)  /* PC9 */
+#define GPIO_SDMMC1_D2   (GPIO_ALT|GPIO_AF12|GPIO_SPEED_50MHz|GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN10) /* PC10 */
+#define GPIO_SDMMC1_D3   (GPIO_ALT|GPIO_AF12|GPIO_SPEED_50MHz|GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN11) /* PC11 */
+
+/* SD card detect (active low) */
+#define GPIO_SDMMC1_NCD  (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTE|GPIO_PIN3)
 
 
 /* USB
@@ -488,12 +493,13 @@
 #if defined(CONFIG_BOARD_USE_PROBES)
 # include "stm32_gpio.h"
 # define PROBE_N(n) (1<<((n)-1))
-# define PROBE_1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTI|GPIO_PIN0)   /* PI0 AUX1 */
-# define PROBE_2    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN12)  /* PH12 AUX2 */
-# define PROBE_3    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN11)  /* PH11 AUX3 */
-# define PROBE_4    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN10)  /* PH10 AUX4 */
-# define PROBE_5    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN13)  /* PD13 AUX5 */
-# define PROBE_6    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN14)  /* PD14 AUX6 */
+// Debug probe pins - not configured for this board (V package doesn't have Port I)
+//# define PROBE_1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN8)   /* PA8 Motor1 */
+//# define PROBE_2    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN11)  /* PE11 Motor2 */
+//# define PROBE_3    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN15)  /* PA15 Motor3 */
+//# define PROBE_4    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN2)   /* PA2 Motor4 */
+//# define PROBE_5    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN7)   /* PA7 Motor5 */
+//# define PROBE_6    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN1)   /* PB1 Motor6 */
 # define PROBE_7    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN6)   /* PH6  AUX7 */
 # define PROBE_8    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTH|GPIO_PIN9)   /* PH9  AUX8 */
 # define PROBE_9    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN11)  /* PE11  CAP1 */

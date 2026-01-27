@@ -1,25 +1,18 @@
 #!/bin/sh
 #
-# PX4 FMUv6U specific board sensors init
+# avianautomata 305ap board sensors init
 #------------------------------------------------------------------------------
 
 board_adc start
 
-# Internal SPI bus ICM-20602
-icm20602 -R 12 -s start
+# SPI2: ICM-42688-P IMU (accel + gyro)
+icm42688p -R 0 -s -b 2 start
 
-# Internal SPI bus ICM-42605
-icm42605 -R 14 -s start
+# SPI3: ASM330LHHTR IMU - NOT USED (no PX4 driver available)
+# Note: ASM330LHH driver not in PX4. Replace with supported IMU in next hw revision.
 
-# Internal SPI bus BMI088 accel/gyro
-bmi088 -A -R 14 -s start
-bmi088 -G -R 14 -s start
+# SPI1: BMP581 Barometer
+bmp581 -s -b 1 start
 
-# internal compass
-bmm150 -I -R 12 start
-
-# internal baro
-bmp388 -I start
-
-# Baro on I2C3
-ms5611 -X start
+# I2C1: MMC5983MA Magnetometer
+mmc5983ma -I -b 1 start

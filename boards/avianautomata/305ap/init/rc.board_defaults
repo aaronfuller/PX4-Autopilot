@@ -3,4 +3,5 @@
 # board specific defaults
 #------------------------------------------------------------------------------
 
-safety_button start
+# DShot telemetry on USART1 with RX/TX swap
+dshot telemetry -d /dev/ttyS0 -x

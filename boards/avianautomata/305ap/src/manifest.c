@@ -68,22 +68,23 @@ typedef struct {
 typedef px4_hw_mft_list_entry_t *px4_hw_mft_list_entry;
 #define px4_hw_mft_list_uninitialized (px4_hw_mft_list_entry) -1
 
-static const px4_hw_mft_item_t device_unsupported = {0, 0, 0};
-
+// Hardware versioning disabled - manifest not used
+// static const px4_hw_mft_item_t device_unsupported = {0, 0, 0};
 // List of components on a specific board configuration
 // The index of those components is given by the enum (px4_hw_mft_item_id_t)
 // declared in board_common.h
-static const px4_hw_mft_item_t hw_mft_list_v0600[] = {
-	{
-		.present     = 0,
-		.mandatory   = 0,
-		.connection  = px4_hw_con_unknown,
-	},
-};
+// No hardware version detection on this board - single configuration
+// static const px4_hw_mft_item_t hw_mft_list_default[] = {
+// 	{
+// 		.present     = 0,
+// 		.mandatory   = 0,
+// 		.connection  = px4_hw_con_unknown,
+// 	},
+// };
 
-static px4_hw_mft_list_entry_t mft_lists[] = {
-	{V6U00, hw_mft_list_v0600, arraySize(hw_mft_list_v0600)},
-};
+// static px4_hw_mft_list_entry_t mft_lists[] = {
+// 	{0x00000000, hw_mft_list_default, arraySize(hw_mft_list_default)},
+// };
 
 /************************************************************************************
  * Name: board_query_manifest
@@ -100,6 +101,9 @@ static px4_hw_mft_list_entry_t mft_lists[] = {
  *
  ************************************************************************************/
 
+// board_query_manifest is not needed since BOARD_HAS_HW_VERSIONING is disabled
+// The macro in board_common.h will provide a default implementation
+/*
 __EXPORT px4_hw_mft_item board_query_manifest(px4_hw_mft_item_id_t id)
 {
 	static px4_hw_mft_list_entry boards_manifest = px4_hw_mft_list_uninitialized;
@@ -129,3 +133,4 @@ __EXPORT px4_hw_mft_item board_query_manifest(px4_hw_mft_item_id_t id)
 
 	return rv;
 }
+*/

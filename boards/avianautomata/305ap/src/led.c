@@ -62,6 +62,7 @@ extern void led_off(int led);
 extern void led_toggle(int led);
 __END_DECLS
 
+// No LEDs on this board - all LED operations are no-ops
 #ifdef CONFIG_ARCH_LEDS
 static bool nuttx_owns_leds = true;
 //                                B  R  S  G
@@ -69,20 +70,20 @@ static bool nuttx_owns_leds = true;
 static const uint8_t xlatpx4[] = {1, 2, 4, 0};
 #  define xlat(p) xlatpx4[(p)]
 static uint32_t g_ledmap[] = {
-	GPIO_nLED_GREEN,   // Indexed by BOARD_LED_GREEN
-	GPIO_nLED_BLUE,    // Indexed by BOARD_LED_BLUE
-	GPIO_nLED_RED,     // Indexed by BOARD_LED_RED
-	GPIO_nSAFETY_SWITCH_LED_OUT,  // Indexed by LED_SAFETY by xlatpx4
+	0,   // Indexed by BOARD_LED_GREEN - not present
+	0,   // Indexed by BOARD_LED_BLUE - not present
+	0,   // Indexed by BOARD_LED_RED - not present
+	0,   // Indexed by LED_SAFETY - not present
 };
 
 #else
 
 #  define xlat(p) (p)
 static uint32_t g_ledmap[] = {
-	GPIO_nLED_BLUE,                     // Indexed by LED_BLUE
-	GPIO_nLED_RED,                      // Indexed by LED_RED, LED_AMBER
-	0,                                  // Indexed by LED_SAFETY (defaulted to an input)
-	GPIO_nLED_GREEN,                    // Indexed by LED_GREEN
+	0,   // Indexed by LED_BLUE - not present
+	0,   // Indexed by LED_RED, LED_AMBER - not present
+	0,   // Indexed by LED_SAFETY - not present
+	0,   // Indexed by LED_GREEN - not present
 };
 
 #endif

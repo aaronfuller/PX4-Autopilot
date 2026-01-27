@@ -37,8 +37,13 @@
  * Board-specific CAN functions.
  */
 
-#ifdef CONFIG_CAN
+// STM32H7 uses FDCAN with SocketCAN
+// The default inline implementation in board_common.h is sufficient
+// No board-specific CAN initialization needed
 
+#if defined(CONFIG_CAN)
+
+// Legacy CAN driver (not used on STM32H7 with FDCAN)
 #include <errno.h>
 #include <debug.h>
 
@@ -123,6 +128,6 @@ int can_devinit(void)
 	return OK;
 }
 
-#endif
-
 #endif /* CONFIG_CAN */
+
+#endif /* CONFIG_STM32H7_FDCAN */

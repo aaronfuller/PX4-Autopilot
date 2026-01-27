@@ -33,41 +33,13 @@
 
 #include <nuttx/spi/spi.h>
 #include <px4_platform_common/px4_manifest.h>
-//                                                              KiB BS    nB
-static const px4_mft_device_t spi5 = {             // FM25V02A on FMUM native: 32K X 8, emulated as (1024 Blocks of 32)
-	.bus_type = px4_mft_device_t::SPI,
-	.devid    = SPIDEV_FLASH(0)
-};
 
-static const px4_mtd_entry_t fmum_fram = {
-	.device = &spi5,
-	.npart = 1,
-	.partd = {
-		{
-			.type = MTD_PARAMETERS,
-			.path = "/fs/mtd_params",
-			.nblocks = (32768 / (1 << CONFIG_RAMTRON_EMULATE_SECTOR_SHIFT))
-		}
-	},
-};
-
-static const px4_mtd_manifest_t board_mtd_config = {
-	.nconfigs   = 1,
-	.entries = {
-		&fmum_fram
-	}
-};
-
-static const px4_mft_entry_s mtd_mft = {
-	.type = MTD,
-	.pmft = (void *) &board_mtd_config,
-};
+// No external flash memory on this board
+// Parameters will be stored on SD card or internal flash
 
 static const px4_mft_s mft = {
-	.nmft = 1,
-	.mfts = {
-		&mtd_mft
-	}
+	.nmft = 0,
+	.mfts = {}
 };
 
 const px4_mft_s *board_get_manifest(void)
