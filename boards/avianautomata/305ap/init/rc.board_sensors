@@ -8,11 +8,11 @@ board_adc start
 # SPI1 BMP581 baro
 bmp581 -s start
 
-# SPI2 ICM-45686 IMU1 (rotation TBD - set after board calibration)
-icm45686 -b 2 -s -R 0 start
+# SPI2 ICM-45686 IMU1 (ROTATION_YAW_90: pin 1 top-left, chip X=right, chip Y=forward)
+icm45686 -b 2 -s -R 2 start
 
-# SPI3 ICM-45686 IMU2 (rotation TBD - set after board calibration)
-icm45686 -b 3 -s -R 0 start
+# SPI3 ICM-45686 IMU2 (ROTATION_YAW_90: pin 1 top-left, chip X=right, chip Y=forward)
+icm45686 -b 3 -s -R 2 start
 
-# I2C1 MMC5983MA magnetometer
-mmc5983ma -I start
+# I2C1 MMC5983MA magnetometer (ROTATION_YAW_90: pin 1 bottom-left, chip X=right, chip Y=forward, chip Z=down)
+mmc5983ma -I -R 2 start
