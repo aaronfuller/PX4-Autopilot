@@ -429,8 +429,8 @@
 /* SPI
  *
  * SPI1 is BMP581 (Baro)
- * SPI2 is ICM-45686 (IMU 1)
- * SPI3 is ICM-45686 (IMU 2)
+ * SPI2 is IMU 1 (LSM6DSV primary, ICM-45686 fallback)
+ * SPI3 is IMU 2 (LSM6DSV primary, ICM-45686 fallback)
  * SPI4 is External
  */
 

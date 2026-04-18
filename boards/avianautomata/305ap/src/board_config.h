@@ -40,7 +40,12 @@
 /* ADC channels
  *
  * VSENSE - PC4  - ADC1 INP4  - Battery voltage via 10k/1k divider (1/11 ratio)
- * ASENSE - PC3_C - ADC3 INP1 - Battery current via external sensor, 10k/1k divider (1/11 ratio)
+ * ASENSE - PC3_C - ADC3 INP1 - Battery current via external sensor
+ *
+ * PC3_C is the analog-only companion pad for PC3 on the STM32H743.
+ * SYSCFG_PMCR PC3SO defaults to 0 (switch closed), connecting PC3_C to PC3.
+ * This means ADC3 INP1 (PC3_C) is readable as GPIO_ADC12_INP13 on ADC1 CH13.
+ * No ADC3 driver path is required — standard board_adc on ADC1 works.
  */
 
 #define ADC1_CH(n)                  (n)
@@ -51,7 +56,7 @@
 	/* PC3  */  GPIO_ADC12_INP13
 
 #define ADC_BATTERY_VOLTAGE_CHANNEL         /* PC4  */  ADC1_CH(4)
-#define ADC_BATTERY_CURRENT_CHANNEL         /* PC3  */  ADC1_CH(13)
+#define ADC_BATTERY_CURRENT_CHANNEL         /* PC3_C via PC3 analog switch */  ADC1_CH(13)
 
 #define ADC_CHANNELS \
 	((1 << ADC_BATTERY_VOLTAGE_CHANNEL) | \
