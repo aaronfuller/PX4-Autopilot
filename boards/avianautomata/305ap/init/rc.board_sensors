@@ -5,6 +5,8 @@
 
 board_adc start
 
+rgbled_gpio start
+
 # SPI1 BMP581 baro
 bmp581 -s start
 

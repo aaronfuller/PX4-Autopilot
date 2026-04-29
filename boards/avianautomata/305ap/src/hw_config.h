@@ -77,8 +77,8 @@
 
 #define OSC_FREQ                       24
 
-#define BOARD_PIN_LED_ACTIVITY         GPIO_nLED_BLUE // BLUE
-#define BOARD_PIN_LED_BOOTLOADER       GPIO_nLED_GREEN // GREEN
+#define BOARD_PIN_LED_BOOTLOADER       GPIO_nLED_BLUE  // BLUE  - blinks while waiting
+#define BOARD_PIN_LED_ACTIVITY         GPIO_nLED_GREEN // GREEN - solid while flashing
 #define BOARD_LED_ON                   0
 #define BOARD_LED_OFF                  1
 
