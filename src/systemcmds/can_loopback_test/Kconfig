@@ -1,0 +1,11 @@
+menuconfig SYSTEMCMDS_CAN_LOOPBACK_TEST
+	bool "can_loopback_test"
+	default n
+	---help---
+		Self-contained FDCAN loopback test.  Requires a physical jumper
+		between the two CAN ports (CAN1_H<->CAN2_H, CAN1_L<->CAN2_L) and
+		that uavcan is stopped before running.
+
+		Sends test frames on FDCAN1 and verifies reception on FDCAN2 and
+		vice versa, exercising both transceivers end-to-end without any
+		external hardware.
