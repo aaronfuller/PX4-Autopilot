@@ -121,6 +121,7 @@ failure [arguments...]
    ok|off|...    Specify failure type
      [-i <val>]  sensor instance (0=all)
                  default: 0
+     [-m <val>]  instance bitmask (bit i = instance i+1); overridden by -i
 ```
 
 ## gpio
@@ -441,6 +442,10 @@ param <command> [arguments...]
    import        Import params from a file
      [<file>]    File name (use default if not given)
 
+   load-or-init  Load params from storage; if blank, seed from a backup file or
+                 defaults and persist
+     [<backup_file>] Backup file to seed from when storage is blank
+
    save          Save params to a file
      [<file>]    File name (use default if not given)
 
@@ -453,6 +458,7 @@ param <command> [arguments...]
    show          Show parameter values
      [-a]        Show all parameters (not just used)
      [-c]        Show only changed params (unused too)
+     [-l]        Show only locked (read-only) params
      [-q]        quiet mode, print only param value (name needs to be exact)
      [<filter>]  Filter by param name (wildcard at end allowed, eg. sys_*)
 
@@ -462,6 +468,14 @@ param <command> [arguments...]
 
    set           Set parameter to a value
      <param_name> <value> Parameter name and value to set
+     [fail]      If provided, let the command fail if param is not found
+
+   bitset        Set bits of an int32 parameter (param |= mask)
+     <param_name> <mask> Parameter name and bitmask (decimal or 0x hex)
+     [fail]      If provided, let the command fail if param is not found
+
+   bitclear      Clear bits of an int32 parameter (param &= ~mask)
+     <param_name> <mask> Parameter name and bitmask (decimal or 0x hex)
      [fail]      If provided, let the command fail if param is not found
 
    set-default   Set parameter default to a value
@@ -497,6 +511,8 @@ param <command> [arguments...]
 
    find          Show index of a param
      <param>     param name
+
+   lock          Lock read-only params (reject future set/reset)
 ```
 
 ## payload_deliverer

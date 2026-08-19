@@ -109,14 +109,16 @@ void EstimatorChecks::checkAndReport(const Context &context, Report &reporter)
 	}
 
 	if (missing_data && (param_ekf2_en == 1)) {
-		/* EVENT
-		 */
-		reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
-					    events::ID("check_estimator_missing_data"),
-					    events::Log::Info, "Waiting for estimator to initialize");
+		if (_estimator_status_sub.advertised()) {
+			/* EVENT
+			 */
+			reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
+						    events::ID("check_estimator_missing_data"),
+						    events::Log::Info, "Waiting for estimator to initialize");
 
-		if (reporter.mavlink_log_pub()) {
-			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: ekf2 missing data");
+			if (reporter.mavlink_log_pub()) {
+				mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: ekf2 missing data");
+			}
 		}
 
 	} else {
@@ -142,7 +144,10 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 				reporter.failsafeFlags().mode_req_local_position_relaxed |
 				(1u << vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF));
 
-	if (!context.isArmed() && estimator_status.pre_flt_fail_innov_heading) {
+	// Skip the checks to avoid warnings during calibration (they recover once the vehicle is still again)
+	const bool report_innovation_failures = !context.isArmed() && !context.status().calibration_enabled;
+
+	if (report_innovation_failures && estimator_status.pre_flt_fail_innov_heading) {
 		/* EVENT
 		 * @description
 		 * Recalibrate compass or perform manual heading reset.
@@ -155,7 +160,7 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: heading estimate invalid");
 		}
 
-	} else if (!context.isArmed() && estimator_status.pre_flt_fail_innov_vel_horiz) {
+	} else if (report_innovation_failures && estimator_status.pre_flt_fail_innov_vel_horiz) {
 		/* EVENT
 		 */
 		reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
@@ -166,7 +171,7 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: horizontal velocity unstable");
 		}
 
-	} else if (!context.isArmed() && estimator_status.pre_flt_fail_innov_vel_vert) {
+	} else if (report_innovation_failures && estimator_status.pre_flt_fail_innov_vel_vert) {
 		/* EVENT
 		 */
 		reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
@@ -177,7 +182,7 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: vertical velocity unstable");
 		}
 
-	} else if (!context.isArmed() && estimator_status.pre_flt_fail_innov_pos_horiz) {
+	} else if (report_innovation_failures && estimator_status.pre_flt_fail_innov_pos_horiz) {
 		/* EVENT
 		 */
 		reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
@@ -188,7 +193,7 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: horizontal position unstable");
 		}
 
-	} else if (!context.isArmed() && estimator_status.pre_flt_fail_innov_height) {
+	} else if (report_innovation_failures && estimator_status.pre_flt_fail_innov_height) {
 		/* EVENT
 		 */
 		reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
@@ -201,12 +206,14 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 	}
 
 
-	if ((_param_com_arm_mag_str.get() >= 1)
+	if (_param_com_arm_mag_str.get()
 	    && (!context.isArmed() && estimator_status.pre_flt_fail_mag_field_disturbed)) {
+
+		const MagArmingCheck mag_arming_check = static_cast<MagArmingCheck>(_param_com_arm_mag_str.get());
 
 		NavModes required_groups_mag = required_groups;
 
-		if (_param_com_arm_mag_str.get() != 1) {
+		if (mag_arming_check != MagArmingCheck::DenyArming) {
 			required_groups_mag = NavModes::None; // optional
 		}
 
@@ -226,7 +233,14 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 				estimator_status.mag_inclination_deg, estimator_status.mag_inclination_ref_deg);
 
 		if (reporter.mavlink_log_pub()) {
-			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Strong magnetic interference");
+			const char *message = "Preflight%s: Strong magnetic interference";
+
+			if (mag_arming_check == MagArmingCheck::DenyArming) {
+				mavlink_log_critical(reporter.mavlink_log_pub(), message, " Fail");
+
+			} else {
+				mavlink_log_warning(reporter.mavlink_log_pub(), message, "");
+			}
 		}
 	}
 
@@ -516,6 +530,11 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 
 void EstimatorChecks::checkSensorBias(const Context &context, Report &reporter, NavModes required_groups)
 {
+	// Skip the check to avoid warnings during calibration
+	if (context.status().calibration_enabled) {
+		return;
+	}
+
 	// _estimator_sensor_bias_sub instance got changed above already
 	estimator_sensor_bias_s bias;
 
@@ -623,6 +642,30 @@ void EstimatorChecks::checkEstimatorStatusFlags(const Context &context, Report &
 
 			if (reporter.mavlink_log_pub()) {
 				mavlink_log_critical(reporter.mavlink_log_pub(), "GNSS heading not reliable - Land now!\t");
+			}
+		}
+
+		// Only require a heading reference when a global origin is set (i.e. global ops are intended)
+		if (!context.isArmed()
+		    && (hrt_absolute_time() - estimator_status_flags.timestamp < 5_s)
+		    && !estimator_status_flags.cs_yaw_align
+		    && lpos.xy_global) {
+
+			const NavModes heading_required_groups = (NavModes)(
+						reporter.failsafeFlags().mode_req_local_position |
+						reporter.failsafeFlags().mode_req_local_position_relaxed |
+						(1u << vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF));
+
+			/* EVENT
+			 * @description
+			 * No heading source has aligned the EKF yaw
+			 */
+			reporter.armingCheckFailure(heading_required_groups, health_component_t::local_position_estimate,
+						    events::ID("check_estimator_heading_no_source"),
+						    events::Log::Error, "No heading reference");
+
+			if (reporter.mavlink_log_pub()) {
+				mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: no heading reference");
 			}
 		}
 	}

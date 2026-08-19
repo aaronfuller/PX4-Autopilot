@@ -46,7 +46,6 @@
 #include <ActuatorEffectivenessStandardVTOL.hpp>
 #include <ActuatorEffectivenessTiltrotorVTOL.hpp>
 #include <ActuatorEffectivenessTailsitterVTOL.hpp>
-#include <ActuatorEffectivenessRoverAckermann.hpp>
 #include <ActuatorEffectivenessFixedWing.hpp>
 #include <ActuatorEffectivenessMCTilt.hpp>
 #include <ActuatorEffectivenessCustom.hpp>
@@ -54,6 +53,8 @@
 #include <ActuatorEffectivenessHelicopter.hpp>
 #include <ActuatorEffectivenessHelicopterCoaxial.hpp>
 #include <ActuatorEffectivenessSpacecraft.hpp>
+
+#include "ActuatorGroupPreflightCheck.hpp"
 
 #include <ControlAllocation.hpp>
 #include <ControlAllocationPseudoInverse.hpp>
@@ -142,6 +143,9 @@ private:
 
 	void check_for_motor_failures();
 
+	// Populate _opposite_motor[] with each motor's geometric antipode (hexarotor only); -1 if none.
+	void computeOppositeMotors();
+
 	void publish_control_allocator_status(int matrix_index);
 
 	void publish_actuator_controls();
@@ -170,13 +174,14 @@ private:
 		HELICOPTER_TAIL_ESC = 10,
 		HELICOPTER_TAIL_SERVO = 11,
 		HELICOPTER_COAXIAL = 12,
-		SPACECRAFT_2D = 13,
-		SPACECRAFT_3D = 14,
+		ROVER_MECANUM = 13,
+		SPACECRAFT_2D = 14,
 	};
 
 	enum class FailureMode {
 		IGNORE = 0,
-		REMOVE_FIRST_FAILING_MOTOR = 1,
+		REMOVE_AND_STOP_OPPOSITE = 1,     ///< remove failed motor; on a hexarotor also stop its geometric opposite
+		REMOVE_AND_REVERSE_OPPOSITE = 2,  ///< remove failed motor; on a hexarotor reverse its geometric opposite
 	};
 
 	EffectivenessSource _effectiveness_source_id{EffectivenessSource::NONE};
@@ -221,6 +226,13 @@ private:
 	uint16_t _handled_motor_failure_bitmask{0};
 	uint16_t _motor_stop_mask{0};
 
+	// Motor-failure recovery: the geometric-opposite motor is made reversible at runtime to recover
+	// control authority after a motor failure.
+	uint16_t _runtime_reversible_bitmask{0}; // motors made reversible at runtime because of failure event
+	int8_t _opposite_motor[MAX_NUM_MOTORS]; // per-motor index of geometric opposite; -1 if none
+
+	ActuatorGroupPreflightCheck _actuator_group_preflight_check;
+
 	perf_counter_t	_loop_perf;			/**< loop duration performance counter */
 
 	bool _armed{false};
@@ -239,6 +251,7 @@ private:
 		(ParamInt<px4::params::CA_METHOD>) _param_ca_method,
 		(ParamInt<px4::params::CA_FAILURE_MODE>) _param_ca_failure_mode,
 		(ParamInt<px4::params::CA_R_REV>) _param_r_rev,
+		(ParamFloat<px4::params::CA_REV_THR_FRAC>) _param_ca_rev_thr_frac,
 		(ParamFloat<px4::params::CA_ICE_PERIOD>) _param_ice_shedding_period
 	)
 
