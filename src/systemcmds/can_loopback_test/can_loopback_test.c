@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "arm_internal.h"        /* putreg32 / getreg32 macros */
 
@@ -112,6 +113,7 @@ typedef struct {
 
 static const fdcan_ctx_t FDCAN1_CTX = { STM32_FDCAN1_BASE, FDCAN1_MSGRAM_OFFSET };
 static const fdcan_ctx_t FDCAN2_CTX = { STM32_FDCAN2_BASE, FDCAN2_MSGRAM_OFFSET };
+static bool g_internal_lbm = false;  /* true = internal FDCAN loopback (no bus) */
 
 
 static int fdcan_enter_init(const fdcan_ctx_t *c)
@@ -165,6 +167,13 @@ static int fdcan_init(const fdcan_ctx_t *c)
 		return -1;
 	}
 
+	/* Disable ALL FDCAN interrupts and both interrupt lines so that no leftover
+	 * ISR (e.g. left enabled after "uavcan stop") drains RX FIFO 0 out from
+	 * under our polling loop.  Clear any pending flags too. */
+	putreg32(0, c->base + STM32_FDCAN_IE_OFFSET);
+	putreg32(0, c->base + STM32_FDCAN_ILE_OFFSET);
+	putreg32(0xFFFFFFFFU, c->base + STM32_FDCAN_IR_OFFSET);
+
 	/* Bit timing */
 	putreg32(NBTP_1MBIT_24MHZ, c->base + STM32_FDCAN_NBTP_OFFSET);
 
@@ -204,6 +213,14 @@ static int fdcan_init(const fdcan_ctx_t *c)
 
 	/* No TX event FIFO */
 	putreg32(0, c->base + STM32_FDCAN_TXEFC_OFFSET);
+
+	if (g_internal_lbm) {
+		/* Internal loopback: TEST + MON + TEST.LBCK. TX routed to RX inside the
+		 * peripheral — no transceiver, bus, jumper, or ACK required. */
+		uint32_t cccr = getreg32(c->base + STM32_FDCAN_CCCR_OFFSET);
+		putreg32(cccr | FDCAN_CCCR_TEST | FDCAN_CCCR_MON, c->base + STM32_FDCAN_CCCR_OFFSET);
+		putreg32(FDCAN_TEST_LBCK, c->base + STM32_FDCAN_TEST_OFFSET);
+	}
 
 	/* Leave init mode and enter normal operation */
 	return fdcan_leave_init(c);
@@ -360,7 +377,10 @@ int can_loopback_test_main(int argc, char *argv[])
 		return 0;
 	}
 
-	PX4_INFO("Initializing FDCAN1 and FDCAN2 for loopback test...");
+	g_internal_lbm = (argc > 1 && strcmp(argv[1], "internal") == 0);
+
+	PX4_INFO("Initializing FDCAN1 and FDCAN2 for %s loopback test...",
+	         g_internal_lbm ? "INTERNAL" : "EXTERNAL");
 
 	if (fdcan_init(&FDCAN1_CTX) != 0) {
 		PX4_ERR("FDCAN1 init failed");
@@ -388,17 +408,22 @@ int can_loopback_test_main(int argc, char *argv[])
 	int total_frames = 0;
 	int fail_count   = 0;
 
+	const fdcan_ctx_t *rx1 = g_internal_lbm ? &FDCAN1_CTX : &FDCAN2_CTX;
+	const fdcan_ctx_t *rx2 = g_internal_lbm ? &FDCAN2_CTX : &FDCAN1_CTX;
+	const char *n1 = g_internal_lbm ? "CAN1" : "CAN2";
+	const char *n2 = g_internal_lbm ? "CAN2" : "CAN1";
+
 	for (unsigned i = 0; i < sizeof(patterns) / sizeof(patterns[0]); i++) {
-		char label[32];
-		snprintf(label, sizeof(label), "pat%u CAN1->CAN2", i);
-		if (loopback_one(&FDCAN1_CTX, &FDCAN2_CTX, label,
+		char label[40];
+		snprintf(label, sizeof(label), "pat%u CAN1->%s", i, n1);
+		if (loopback_one(&FDCAN1_CTX, rx1, label,
 		                 patterns[i].id, patterns[i].data, patterns[i].dlc) != 0) {
 			fail_count++;
 		}
 		total_frames++;
 
-		snprintf(label, sizeof(label), "pat%u CAN2->CAN1", i);
-		if (loopback_one(&FDCAN2_CTX, &FDCAN1_CTX, label,
+		snprintf(label, sizeof(label), "pat%u CAN2->%s", i, n2);
+		if (loopback_one(&FDCAN2_CTX, rx2, label,
 		                 patterns[i].id, patterns[i].data, patterns[i].dlc) != 0) {
 			fail_count++;
 		}
