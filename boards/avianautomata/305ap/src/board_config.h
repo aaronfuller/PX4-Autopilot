@@ -62,10 +62,11 @@
 
 #define SYSTEM_ADC_BASE STM32_ADC1_BASE
 
-/* CAN transceiver enable GPIOs — SIT1044TK: HIGH = normal mode, LOW = standby */
+/* CAN transceiver STB pins (SIT1044TK, ACTIVE-LOW: LOW = normal, HIGH = standby).
+ * Board has pulldowns so default is normal/on; drive LOW to keep transceivers enabled. */
 
-#define GPIO_CAN1_EN            /* PA10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN10)
-#define GPIO_CAN2_EN            /* PE1  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN1)
+#define GPIO_CAN1_EN            /* PA10 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN10)
+#define GPIO_CAN2_EN            /* PE1  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN1)
 
 /* PWM */
 
