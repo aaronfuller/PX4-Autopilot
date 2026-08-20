@@ -48,6 +48,8 @@
 #include <stdbool.h>
 
 #include "arm_internal.h"        /* putreg32 / getreg32 macros */
+#include "stm32_gpio.h"          /* stm32_gpioread + GPIO_PORT/PIN macros */
+#include <arch/board/board.h> /* GPIO_CAN1_RX/TX, GPIO_CAN2_RX/TX pinsets */
 
 /* Message RAM allocation.  FDCAN1 and FDCAN2 share the same physical RAM
  * (STM32_CANRAM_BASE, 10 KB).  We split it in half: FDCAN1 gets the first
@@ -368,6 +370,17 @@ static void print_usage(void)
 }
 
 
+static void can_pins_config(void)
+{
+	/* Mux the FDCAN pins to their alternate function.  The test pokes the FDCAN
+	 * registers directly and must not rely on uavcan having configured pins. */
+	stm32_configgpio(GPIO_CAN1_RX);
+	stm32_configgpio(GPIO_CAN1_TX);
+	stm32_configgpio(GPIO_CAN2_RX);
+	stm32_configgpio(GPIO_CAN2_TX);
+}
+
+
 __EXPORT int can_loopback_test_main(int argc, char *argv[]);
 
 int can_loopback_test_main(int argc, char *argv[])
@@ -378,6 +391,34 @@ int can_loopback_test_main(int argc, char *argv[])
 	}
 
 	g_internal_lbm = (argc > 1 && strcmp(argv[1], "internal") == 0);
+	const bool g_blast = (argc > 1 && strcmp(argv[1], "blast") == 0);
+
+	can_pins_config();
+
+	if (g_blast) {
+		if (fdcan_init(&FDCAN1_CTX) != 0 || fdcan_init(&FDCAN2_CTX) != 0) {
+			printf("CAN_LOOPBACK: FAIL blast_init\n");
+			return 1;
+		}
+		PX4_INFO("pin idle (1=recessive): CAN1_RX=%d CAN1_TX=%d CAN2_RX=%d CAN2_TX=%d",
+			 stm32_gpioread(GPIO_PORTD | GPIO_PIN0), stm32_gpioread(GPIO_PORTD | GPIO_PIN1),
+			 stm32_gpioread(GPIO_PORTB | GPIO_PIN5), stm32_gpioread(GPIO_PORTB | GPIO_PIN6));
+		PX4_INFO("BLAST: continuous CAN1->CAN2 for ~30 s -- scope the bus now");
+		uint8_t data[8] = { 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55 };
+		uint32_t queued = 0;
+		uint64_t end = millis() + 30000;
+		while (millis() < end) {
+			if (fdcan_send(&FDCAN1_CTX, 0x123, data, 8) == 0) { queued++; }
+			uint32_t _id; uint8_t _d[8]; uint8_t _l;
+			(void)fdcan_recv(&FDCAN2_CTX, &_id, _d, &_l);
+			(void)fdcan_recv(&FDCAN1_CTX, &_id, _d, &_l);
+		}
+		fdcan_enter_init(&FDCAN1_CTX);
+		fdcan_enter_init(&FDCAN2_CTX);
+		PX4_INFO("BLAST done: %u frames queued", (unsigned)queued);
+		printf("CAN_LOOPBACK: BLAST %u frames queued\n", (unsigned)queued);
+		return 0;
+	}
 
 	PX4_INFO("Initializing FDCAN1 and FDCAN2 for %s loopback test...",
 	         g_internal_lbm ? "INTERNAL" : "EXTERNAL");
