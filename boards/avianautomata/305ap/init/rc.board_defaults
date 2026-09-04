@@ -20,3 +20,7 @@ param set-default RC_INPUT_PROTO -1
 
 # No USB VBUS detection - bypass supply check
 param set-default CBRK_SUPPLY_CHK 894281
+
+# MSP OSD on VTX UART (USART2 → /dev/ttyS1 → TEL3)
+param set-default MSP_OSD_CONFIG 103
+param set-default SER_TEL3_BAUD 115200
