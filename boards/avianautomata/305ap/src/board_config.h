@@ -121,8 +121,14 @@
 
 /* GPIO init list - all GPIOs configured at boot */
 
+/* FDCAN pins (board.h) must be muxed here: neither the uavcan stm32h7 driver nor NuttX (without
+ * its own FDCAN driver) configures them, so FDCAN1/2 were never connected to the transceivers. */
 #define PX4_GPIO_INIT_LIST { \
 		PX4_ADC_GPIO,                     \
+		GPIO_CAN1_TX,                     \
+		GPIO_CAN1_RX,                     \
+		GPIO_CAN2_TX,                     \
+		GPIO_CAN2_RX,                     \
 		GPIO_CAN1_EN,                     \
 		GPIO_CAN2_EN,                     \
 		GPIO_TONE_ALARM_IDLE              \
