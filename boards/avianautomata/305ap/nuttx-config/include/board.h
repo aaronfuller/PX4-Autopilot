@@ -395,8 +395,7 @@
 #define GPIO_UART4_CTS   GPIO_UART4_CTS_1      /* PB0  */
 
 /* UART5 - RC Input
- *   SINGLEWIRE half-duplex on PB13.
- *   SWAP_RXTX configured in board_config.h.
+ *   SINGLEWIRE half-duplex on PB13 (TX pin), no RX/TX swap (board_config.h).
  */
 
 #define GPIO_UART5_TX    GPIO_UART5_TX_1       /* PB13 */

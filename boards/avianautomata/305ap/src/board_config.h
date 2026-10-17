@@ -89,11 +89,11 @@
 #define HRT_TIMER               8  /* use timer8 for the HRT */
 #define HRT_TIMER_CHANNEL       3  /* use capture/compare channel 3 */
 
-/* RC Serial port - UART5 with single-wire SWAP */
+/* RC Serial port - UART5 single-wire (half-duplex) on PB13, the UART5 TX pin. No RX/TX swap:
+ * half-duplex runs on the TX signal, and swapping moves it to the RX pin (PC0, not connected). */
 
 #define RC_SERIAL_PORT                     "/dev/ttyS4"
 #define RC_SERIAL_SINGLEWIRE
-#define RC_SERIAL_SWAP_RXTX
 
 /* SD card */
 
