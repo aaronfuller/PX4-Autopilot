@@ -210,7 +210,9 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 	led_on(LED_GREEN); // Indicate Power.
 	led_off(LED_BLUE);
 
-	if (board_hardfault_init(2, true) != 0) {
+	/* No prompt: the console has no RX pin (board.h, USART3), yet stdin reports input at
+	 * boot, so after a logged hard fault the prompt would halt the boot until power-off. */
+	if (board_hardfault_init(2, false) != 0) {
 		led_on(LED_RED);
 	}
 
